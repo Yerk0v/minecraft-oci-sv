@@ -1,0 +1,65 @@
+#cloud-config
+package_update: true
+package_upgrade: true
+packages:
+  - ca-certificates
+  - curl
+  - docker.io
+  - docker-compose-v2
+  - ufw
+
+write_files:
+  - path: /usr/local/sbin/mount-minepanel-data
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+      device="${data_device}"
+      mountpoint=/srv/minepanel
+
+      for _ in $$(seq 1 60); do
+        [ -b "$$device" ] && break
+        sleep 2
+      done
+      [ -b "$$device" ] || exit 1
+
+      if ! blkid "$$device" >/dev/null 2>&1; then
+        mkfs.ext4 -F "$$device"
+      fi
+
+      uuid=$$(blkid -s UUID -o value "$$device")
+      mkdir -p "$$mountpoint"
+      grep -q "$$uuid" /etc/fstab || echo "UUID=$$uuid $$mountpoint ext4 defaults,nofail 0 2" >> /etc/fstab
+      mountpoint -q "$$mountpoint" || mount "$$mountpoint"
+      mkdir -p "$$mountpoint/servers" "$$mountpoint/data" "$$mountpoint/backups"
+      chown -R ubuntu:ubuntu "$$mountpoint"
+  - path: /etc/systemd/system/minepanel-data.service
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=Mount Minepanel data volume
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=oneshot
+      RemainAfterExit=yes
+      ExecStart=/usr/local/sbin/mount-minepanel-data
+
+      [Install]
+      WantedBy=multi-user.target
+
+runcmd:
+  - usermod -aG docker ubuntu
+  - systemctl enable --now docker
+  - systemctl enable --now minepanel-data.service
+  - ufw default deny incoming
+  - ufw default allow outgoing
+  - ufw allow OpenSSH
+  - ufw allow 80/tcp
+  - ufw allow 443/tcp
+  - ufw allow 25565/tcp
+%{ if enable_bedrock ~}
+  - ufw allow 19132/udp
+%{ endif ~}
+  - ufw --force enable

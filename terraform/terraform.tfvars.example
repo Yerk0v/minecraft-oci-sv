@@ -1,0 +1,16 @@
+# OCI Console → Profile → Tenancy: copy the tenancy OCID.
+tenancy_ocid     = "ocid1.tenancy.oc1..replace-me"
+compartment_ocid = "ocid1.tenancy.oc1..replace-me"
+
+# OCI Console → Identity & Security → Availability Domains.
+availability_domain = "replace-with-your-availability-domain"
+
+# Run: cat ~/.ssh/id_ed25519.pub
+ssh_public_key = "ssh-ed25519 AAAA... replace-me"
+
+# Find your current public address with: curl https://checkip.amazonaws.com
+admin_cidrs = ["203.0.113.42/32"]
+
+# Keep false until you actually run Bedrock.
+enable_bedrock = false
+

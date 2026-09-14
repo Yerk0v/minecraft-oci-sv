@@ -1,0 +1,49 @@
+services:
+  backend:
+    image: ketbom/minepanel-backend:latest
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      FRONTEND_URL: https://${PANEL_DOMAIN}
+      JWT_SECRET: ${JWT_SECRET}
+      ALLOW_INSECURE_AUTH_COOKIES: "false"
+      BASE_DIR: /srv/minepanel
+    volumes:
+      - /srv/minepanel/servers:/app/servers
+      - /srv/minepanel/data:/app/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - minepanel
+    restart: unless-stopped
+
+  frontend:
+    image: ketbom/minepanel-frontend:latest
+    environment:
+      NEXT_PUBLIC_BACKEND_URL: https://${API_DOMAIN}
+    networks:
+      - minepanel
+    restart: unless-stopped
+
+  caddy:
+    image: caddy:2-alpine
+    env_file: .env
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - minepanel
+    restart: unless-stopped
+
+networks:
+  minepanel:
+    name: minepanel-network
+    driver: bridge
+
+volumes:
+  caddy_data:
+  caddy_config:
+
