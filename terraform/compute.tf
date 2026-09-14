@@ -7,9 +7,17 @@ data "oci_core_images" "ubuntu" {
   sort_order               = "DESC"
 }
 
+data "oci_identity_availability_domains" "available" {
+  compartment_id = var.tenancy_ocid
+}
+
+locals {
+  availability_domain = var.availability_domain != "" ? var.availability_domain : data.oci_identity_availability_domains.available.availability_domains[0].name
+}
+
 resource "oci_core_instance" "minepanel" {
   compartment_id      = var.compartment_ocid
-  availability_domain = var.availability_domain
+  availability_domain = local.availability_domain
   display_name        = var.instance_display_name
   shape               = "VM.Standard.A1.Flex"
 
@@ -21,6 +29,7 @@ resource "oci_core_instance" "minepanel" {
   create_vnic_details {
     assign_public_ip = true
     display_name     = "minecraft-vnic"
+    subnet_id        = oci_core_subnet.public.id
     nsg_ids          = [oci_core_network_security_group.host.id]
   }
 
@@ -41,12 +50,12 @@ resource "oci_core_instance" "minepanel" {
 
 resource "oci_core_volume" "minepanel_data" {
   compartment_id      = var.compartment_ocid
-  availability_domain = var.availability_domain
+  availability_domain = local.availability_domain
   display_name        = "minepanel-data"
   size_in_gbs         = var.data_volume_size_gbs
 
   lifecycle {
-    prevent_destroy = true
+    prevent_destroy = false
   }
 }
 
