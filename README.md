@@ -44,7 +44,10 @@ terraform apply
 Before `plan`, edit `terraform.tfvars`:
 
 - Replace both OCIDs.
-- Select an availability domain shown in the OCI Console.
+- Leave `availability_domain` unset unless you specifically need to select one;
+  Terraform discovers the first available AD. If you set it, use the full AD name
+  returned by OCI, not the region name (for example, `SaSantiago-1-AD-1`, not
+  `sa-santiago-1`).
 - Paste your public SSH key.
 - Replace the example `admin_cidrs` IP with your own current public IP/CIDR.
 
@@ -101,7 +104,7 @@ Never run `terraform destroy` casually. The data volume has `prevent_destroy`, s
 - Keep `terraform.tfvars`, `.env`, Terraform state, and private keys out of Git. The supplied `.gitignore` excludes them.
 - The panel can control Docker through `/var/run/docker.sock`; panel administrator access is effectively host-administrator access.
 - This template permits HTTP from the public internet only so Caddy can complete certificate challenges. HTTPS and SSH are limited to `admin_cidrs`; Minecraft is public.
-- OCI Network Security Groups and UFW are both configured. Add mod/plugin ports deliberately in both layers.
+- OCI Network Security Groups are the host firewall. Add mod/plugin ports deliberately there. This template intentionally does not enable UFW: OCI documents that UFW can remove rules needed for Ubuntu instances to reconnect to boot and block volumes after a reboot.
 
 ## License note
 
