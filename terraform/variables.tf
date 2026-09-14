@@ -9,8 +9,9 @@ variable "compartment_ocid" {
 }
 
 variable "availability_domain" {
-  description = "Availability domain for the instance and data volume."
+  description = "Optional availability domain override. Leave empty to select the first AD returned by OCI."
   type        = string
+  default     = ""
 }
 
 variable "ssh_public_key" {
@@ -69,4 +70,3 @@ variable "enable_bedrock" {
   type        = bool
   default     = false
 }
-
