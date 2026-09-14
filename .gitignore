@@ -8,4 +8,4 @@ terraform.tfvars.json
 deploy/.env
 *.pem
 *.key
-
+.codex 
